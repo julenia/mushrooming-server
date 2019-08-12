@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize')
 const db = require('../db')
-//const Mushroomer = require('../mushroomer/model')
+const Mushroomer = require('../mushroomer/model')
 const Forest = db.define(
   'forest',
   {
@@ -35,7 +35,6 @@ const Forest = db.define(
   { tableName: 'forests'}
   
 );
-//Forest.hasMany(Mushroomer)
 
 
 module.exports = Forest
