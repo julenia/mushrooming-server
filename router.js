@@ -35,6 +35,11 @@ router.post('/forest', (req, res, next) => {
   })
   .catch(error => next(error))
 })
+router.get('/forest/:id', (req, res, next) =>{
+  Forest.findByPk(req.params.id)
+  .then(forest => res.send(forest))
+  .catch(next)
+})
 
 router.post('/forest/:id', 
   async (req, res, next) => {
