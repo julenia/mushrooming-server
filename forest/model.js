@@ -13,6 +13,7 @@ const Forest = db.define(
       type: Sequelize.STRING,
       field: 'status',
       allowNull: false,
+      defaultValue: 'joining',
       values: ['joining', 'started', 'finished']
     },
     turn: {

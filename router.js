@@ -11,6 +11,7 @@ router.get(
   async (request, response) => {
     const forests = await Forest
       .findAll({ include: [Mushroomer] })
+      response.send(forests)
 
     const data = JSON.stringify(forests)
     stream.updateInit(data)
