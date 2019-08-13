@@ -78,19 +78,22 @@ router.put('/mushroomer/:id', async(req, res, next) => {
   const forest = await Forest.findByPk(forestId)
   const forestStatus = forest.status
   const turn = forest.turn
-  const roll= req.body.roll
+  const roll= parseInt(req.body.roll)
   if(forestStatus==='started' && turn === mushroomer.id){
-    if(req.body.good){
-      mushroomer.update({location: mushroomer.location+roll, good: mushroomer.good+req.body.good})
-      res.json(mushroomer)
+    const good=forest.good.filter(good=>good===(mushroomer.location+roll))
+    const bad=forest.bad.filter(bad=>bad===(mushroomer.location+roll))
+    if(good.length){
+      mushroomer.update({location: mushroomer.location+roll, good: mushroomer.good+1})
+      .then(mush=>res.json(mush))
+      .catch(next)
     }
-    else if(req.body.bad){
-      mushroomer.update({location: mushroomer.location+roll, bad: mushroomer.bad+req.body.bad})
-      res.json(mushroomer)
+    else if(bad.length){
+      mushroomer.update({location: mushroomer.location+roll, bad: mushroomer.bad+1})
+      .then(mush=>res.json(mush))
     }
     else{
       mushroomer.update({location: mushroomer.location+roll})
-      res.json(mushroomer)
+      .then(mush=>res.json(mush))
     }
   }
 })
