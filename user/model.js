@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize')
 const db = require('../db')
 const Mushroomer = require('../mushroomer/model')
+
 const User = db.define(
   'user',
   {

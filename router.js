@@ -1,8 +1,10 @@
 const {Router} = require('express')
 const Sse = require('json-sse')
 const User = require('./user/model')
-const Mushroomer = require('./mushroomer/model')
+
 const Forest = require('./forest/model')
+const Mushroomer = require('./mushroomer/model')
+
 const stream = new Sse()
 const router = new Router()
 
@@ -55,7 +57,7 @@ router.post('/forest', (req, res, next) => {
 })
 
 router.get('/forest/:id', (req, res, next) =>{
-  Forest.findByPk(req.params.id)
+  Forest.findByPk(req.params.id, { include: [Mushroomer] })
   .then(forest => res.send(forest))
   .catch(next)
 })
