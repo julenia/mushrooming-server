@@ -18,8 +18,7 @@ const Forest = db.define(
     },
     turn: {
       type: Sequelize.INTEGER,
-      field: 'mushroomerId',
-      
+      field: 'next_mushroomerId',
     },
     good: {
       type: Sequelize.ARRAY(Sequelize.INTEGER),
