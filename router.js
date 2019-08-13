@@ -1,9 +1,25 @@
 const {Router} = require('express')
+const Sse = require('json-sse')
 const User = require('./user/model')
-const Mushroomer = require('./mushroomer/model')
-const Forest = require('./forest/model')
 
+const Forest = require('./forest/model')
+const Mushroomer = require('./mushroomer/model')
+
+const stream = new Sse()
 const router = new Router()
+
+router.get(
+  '/stream',
+  async (request, response) => {
+    const forests = await Forest
+      .findAll({ include: [Mushroomer] })
+      response.send(forests)
+
+    const data = JSON.stringify(forests)
+    stream.updateInit(data)
+    stream.init(request, response)
+  }
+)
 
 router.get('/user', (req, res, next) => {
   User.findAll()
@@ -20,30 +36,35 @@ router.post('/user', (req, res, next) => {
   })
   .catch(error => next(error))
 })
-router.get('/forest', (req, res, next) => {
-  Forest.findAll()
-  .then((forest)=> {
-    return res.send(forest)
-   })
-  .catch(error => next(error))
-})
+// router.get('/forest', (req, res, next) => {
+//   Forest.findAll()
+//   .then((forest)=> {
+//     return res.send(forest)
+//    })
+//   .catch(error => next(error))
+// })
 
 router.post('/forest', (req, res, next) => {
   Forest.create(req.body)
   .then((forest) =>{
+    const data = JSON.stringify(forest)
+
+    stream.updateInit(data)
+    stream.send(data)
     return res.json(forest)
   })
   .catch(error => next(error))
 })
+
 router.get('/forest/:id', (req, res, next) =>{
-  Forest.findByPk(req.params.id)
+  Forest.findByPk(req.params.id, { include: [Mushroomer] })
   .then(forest => res.send(forest))
   .catch(next)
 })
 
 router.post('/forest/:id', 
   async (req, res, next) => {
-  const forest = await Forest.findByPk(req.params.id)
+  const forest = await Forest.findByPk(req.params.id,{include: [Mushroomer]})
   const status = forest.status
   const turn = forest.turn
   console.log('turn',turn)
@@ -54,6 +75,9 @@ router.post('/forest/:id',
       if(!turn) forest.update({turn: mushroomer.id})})
     .catch(error=>next(error))
   }
+    const data = JSON.stringify(forest)
+    stream.updateInit(data)
+    stream.send(data)
 })
 
 router.put('/forest/:id', (req, res, next)=> {
