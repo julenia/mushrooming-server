@@ -45,14 +45,56 @@ router.post('/forest/:id',
   async (req, res, next) => {
   const forest = await Forest.findByPk(req.params.id)
   const status = forest.status
-  console.log('req.params.id',req.params.id)
-  console.log('req.body', req.body)
-  console.log('status', status)
-
+  const turn = forest.turn
+  console.log('turn',turn)
   if(status==='joining') {
     Mushroomer.create({forestId: req.params.id, userId: req.body.id})
-    .then(mushroomer => res.json(mushroomer))
+    .then(mushroomer => {
+      res.json(mushroomer)
+      if(!turn) forest.update({turn: mushroomer.id})})
     .catch(error=>next(error))
+  }
+})
+
+router.put('/forest/:id', (req, res, next)=> {
+  Forest.findByPk(req.params.id)
+  .then(forest => {
+    if(req.body.status) forest.update({status: req.body.status})
+    else if(req.body.mushroomerId) forest.update({turn: req.body.mushroomerId})
+    res.json(forest)
+  })
+  .catch(next)
+})
+
+router.get('/mushroomer/:id', (req, res, next) => {
+  Mushroomer.findByPk(req.params.id)
+  .then(mushroomer => res.send(mushroomer))
+  .catch(next)
+})
+
+router.put('/mushroomer/:id', async(req, res, next) => {
+  const mushroomer = await Mushroomer.findByPk(req.params.id)
+  const forestId = mushroomer.forestId
+  const forest = await Forest.findByPk(forestId)
+  const forestStatus = forest.status
+  const turn = forest.turn
+  const roll= parseInt(req.body.roll)
+  if(forestStatus==='started' && turn === mushroomer.id){
+    const good=forest.good.filter(good=>good===(mushroomer.location+roll))
+    const bad=forest.bad.filter(bad=>bad===(mushroomer.location+roll))
+    if(good.length){
+      mushroomer.update({location: mushroomer.location+roll, good: mushroomer.good+1})
+      .then(mush=>res.json(mush))
+      .catch(next)
+    }
+    else if(bad.length){
+      mushroomer.update({location: mushroomer.location+roll, bad: mushroomer.bad+1})
+      .then(mush=>res.json(mush))
+    }
+    else{
+      mushroomer.update({location: mushroomer.location+roll})
+      .then(mush=>res.json(mush))
+    }
   }
 })
 

@@ -9,14 +9,17 @@ const Mushroomer = db.define(
     location: {
       type: Sequelize.INTEGER,
       field: 'location',
+      defaultValue: 0
     },
     good: {
       type: Sequelize.INTEGER,
-      field: 'number_of_good_mushrooms'
+      field: 'number_of_good_mushrooms',
+      defaultValue: 0
     },
     bad: {
       type: Sequelize.INTEGER,
       field: 'number_of_bad_mushrooms',
+      defaultValue: 0
     },
   },
   { tableName: 'mushroomers'}
