@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize')
 const db = require('../db')
-const Mushroomer = require('../mushroomer/model')
+
 const Forest = db.define(
   'forest',
   {
@@ -13,12 +13,12 @@ const Forest = db.define(
       type: Sequelize.STRING,
       field: 'status',
       allowNull: false,
+      defaultValue: 'joining',
       values: ['joining', 'started', 'finished']
     },
     turn: {
       type: Sequelize.INTEGER,
-      field: 'mushroomerId',
-      
+      field: 'next_mushroomerId',
     },
     good: {
       type: Sequelize.ARRAY(Sequelize.INTEGER),

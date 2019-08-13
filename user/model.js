@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize')
 const db = require('../db')
 const Mushroomer = require('../mushroomer/model')
+
 const User = db.define(
   'user',
   {
@@ -25,15 +26,18 @@ const User = db.define(
     },
     points: {
       type: Sequelize.INTEGER,
-      field: 'number_of_points'
+      field: 'number_of_points',
+      defaultValue: 0
     },
     won_games: {
       type: Sequelize.INTEGER,
-      field: 'number_of_won_games'
+      field: 'number_of_won_games',
+      defaultValue: 0
     },
     played_games: {
       type: Sequelize.INTEGER,
-      field: 'number_of_played_games'
+      field: 'number_of_played_games',
+      defaultValue: 0
     }
 
   },
