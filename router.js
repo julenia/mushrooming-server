@@ -50,7 +50,6 @@ router.post(
     })
     
     update()
-
     res.send(entity)
   }
 )
@@ -60,7 +59,6 @@ router.post(
   async (req, res, next) => {
 
     const forest = await Forest.findByPk(req.params.id)
-
     const { status, turn } = forest
     
     if (status === 'joining') {
@@ -77,16 +75,26 @@ router.post(
     }
     
     update()
-
     res.send(forest)
   }
 )
 
-router.put("/start/:id")
+router.put(
+  "/start/:id", 
+  async (req, res, next) => {
+    const forest = await Forest.findByPk(req.params.id, { include: [Mushroomer] })
+    const { status, mushroomers } = forest
 
-// make the good and bad loc disappear after beeing picked up » done
-// mushroomer on location 35 » finish the game » done?!
-// change whose turn it is
+    if (status === 'joining' && mushroomers.length >= 2) {
+      await forest.update({status: 'started'}) 
+    }
+
+    update()
+    res.send(forest)
+  }
+)
+
+
 router.put(
   '/roll/:id', 
   async (req, res, next) => {
