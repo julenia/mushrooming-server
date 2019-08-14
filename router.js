@@ -13,7 +13,6 @@ router.get(
   async (request, response) => {
     const forests = await Forest
       .findAll({ include: [Mushroomer] })
-      response.send(forests)
 
     const data = JSON.stringify(forests)
     stream.updateInit(data)
@@ -21,28 +20,24 @@ router.get(
   }
 )
 
-router.get('/user', (req, res, next) => {
-  User.findAll()
-  .then((user)=> {
-    return res.send(user)
-   })
-  .catch(error => next(error))
-})
+router.get(
+  '/stream',
+  async (req, res, next) => {
+    const user = await User
+      .findAll({ include: [Mushroomer] })
 
-router.post('/user', (req, res, next) => {
-  User.create(req.body)
-  .then((user) =>{
-    return res.json(user)
-  })
-  .catch(error => next(error))
+    const data = JSON.stringify(user)
+    stream.updateInit(data)
+    stream.init(req, res)
+  }
+)
+
+router.post(
+  '/user',
+  async (req, res, next) => {
+  const user = await User.create(req.body)
+  res.json(user)
 })
-// router.get('/forest', (req, res, next) => {
-//   Forest.findAll()
-//   .then((forest)=> {
-//     return res.send(forest)
-//    })
-//   .catch(error => next(error))
-// })
 
 router.post('/forest', (req, res, next) => {
   Forest.create(req.body)
@@ -96,29 +91,40 @@ router.get('/mushroomer/:id', (req, res, next) => {
   .catch(next)
 })
 
-router.put('/mushroomer/:id', async(req, res, next) => {
+// make the good and bad loc disappear after beeing picked up » done
+// mushroomer on location 35 » finish the game
+router.put('/mushroomer/:id', async (req, res, next) => {
   const mushroomer = await Mushroomer.findByPk(req.params.id)
   const forestId = mushroomer.forestId
   const forest = await Forest.findByPk(forestId)
   const forestStatus = forest.status
   const turn = forest.turn
-  const roll= parseInt(req.body.roll)
-  if(forestStatus==='started' && turn === mushroomer.id){
-    const good=forest.good.filter(good=>good===(mushroomer.location+roll))
-    const bad=forest.bad.filter(bad=>bad===(mushroomer.location+roll))
-    if(good.length){
-      mushroomer.update({location: mushroomer.location+roll, good: mushroomer.good+1})
-      .then(mush=>res.json(mush))
-      .catch(next)
+  const roll = Math.ceil(Math.random() * 6)
+  if (forestStatus === 'started' && turn === mushroomer.id) {
+    const newLocation = mushroomer.location + roll
+    // .some » returns a boolean
+    const good = forest.good.some(good => good === newLocation)
+    const bad = forest.bad.some(bad => bad === newLocation)
+
+    const mushroomerUpdate = { location: newLocation }
+    const forestUpdate = {}
+
+    if (good) {
+      mushroomerUpdate.good = mushroomer.good + 1
+      forestUpdate.good = forest.good.filter(good => good !== newLocation)
+    } else if (bad) {
+      mushroomerUpdate.bad = mushroomer.bad + 1
+      forestUpdate.bad = forest.bad.filter(bad => bad !== newLocation)
     }
-    else if(bad.length){
-      mushroomer.update({location: mushroomer.location+roll, bad: mushroomer.bad+1})
-      .then(mush=>res.json(mush))
-    }
-    else{
-      mushroomer.update({location: mushroomer.location+roll})
-      .then(mush=>res.json(mush))
-    }
+
+    const updatedMushroomer = await mushroomer.update(mushroomerUpdate)
+    await forest.update(forestUpdate)
+
+    const forests = await Forest.findAll({ include: [Mushroomer] })
+    const data = JSON.stringify(forests)
+    stream.send(data)
+    
+    res.json(updatedMushroomer)
   }
 })
 
