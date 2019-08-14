@@ -170,24 +170,29 @@ router.put(
 
     if (forestStatus === 'started' && turn === mushroomer.id) {
       const newLocation = mushroomer.location + roll
-      // .some » returns a boolean
-      const good = forest.good.some(good => good === newLocation)
-      const bad = forest.bad.some(bad => bad === newLocation)
+      // finish game
+      if (newLocation >= 35) {
+        await forest.update({status: 'finished'})
+      } else {
+        // .some » returns a boolean
+        const good = forest.good.some(good => good === newLocation)
+        const bad = forest.bad.some(bad => bad === newLocation)
 
-      const mushroomerUpdate = { location: newLocation }
-      const forestUpdate = {}
+        const mushroomerUpdate = { location: newLocation }
+        const forestUpdate = {}
 
-      if (good) {
-        mushroomerUpdate.good = mushroomer.good + 1
-        forestUpdate.good = forest.good.filter(good => good !== newLocation)
-      } else if (bad) {
-        mushroomerUpdate.bad = mushroomer.bad + 1
-        forestUpdate.bad = forest.bad.filter(bad => bad !== newLocation)
+        if (good) {
+          mushroomerUpdate.good = mushroomer.good + 1
+          forestUpdate.good = forest.good.filter(good => good !== newLocation)
+        } else if (bad) {
+          mushroomerUpdate.bad = mushroomer.bad + 1
+          forestUpdate.bad = forest.bad.filter(bad => bad !== newLocation)
+        }
+
+        const updatedMushroomer = await mushroomer.update(mushroomerUpdate)
+        await forest.update(forestUpdate)
       }
-
-      const updatedMushroomer = await mushroomer.update(mushroomerUpdate)
-      await forest.update(forestUpdate)
-
+      
       const forests = await Forest.findAll({ include: [Mushroomer] })
       const data = JSON.stringify(forests)
       stream.send(data)
