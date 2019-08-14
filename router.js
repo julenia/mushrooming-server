@@ -22,17 +22,17 @@ router.get(
 
 // user playing through mushroomer »
 // Should it be in the stream???
-router.get(
-  '/stream',
-  async (req, res, next) => {
-    const user = await User
-      .findAll({ include: [Mushroomer] })
+// router.get(
+//   '/stream',
+//   async (req, res, next) => {
+//     const user = await User
+//       .findAll({ include: [Mushroomer] })
 
-    const data = JSON.stringify(user)
-    stream.updateInit(data)
-    stream.init(req, res)
-  }
-)
+//     const data = JSON.stringify(user)
+//     stream.updateInit(data)
+//     stream.init(req, res)
+//   }
+// )
 
 router.post(
   '/user',
