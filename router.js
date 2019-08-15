@@ -193,6 +193,7 @@ router.post(
           res.send({
             // jwt: toJWT({ userId: 1 })
             jwt: toJWT({ userId: entity.id }),
+            user: entity,
             userId: entity.id
           })
         } else {
