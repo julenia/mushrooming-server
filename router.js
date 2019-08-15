@@ -146,6 +146,7 @@ router.put(
 router.post(
   '/user',
   async (req, res, next) => {
+    console.log("POST user test")
     const { nickname, email, password, image } = req.body
     const user = await User.findOne({ where: { email: email } })
 
@@ -161,6 +162,7 @@ router.post(
 
       const entity = await User
         .create(encryptedUser)
+
       res.send(entity)
     }
   }
@@ -190,7 +192,8 @@ router.post(
           // 3. if the password is correct, return a JWT with the userId of the user (user.id)
           res.send({
             // jwt: toJWT({ userId: 1 })
-            jwt: toJWT({ userId: entity.id })
+            jwt: toJWT({ userId: entity.id }),
+            userId: entity.id
           })
         } else {
           res.status(400).send({
