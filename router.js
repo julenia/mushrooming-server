@@ -1,4 +1,4 @@
-const {Router} = require('express')
+const { Router } = require('express')
 const Sse = require('json-sse')
 const User = require('./user/model')
 
@@ -8,9 +8,13 @@ const Mushroomer = require('./mushroomer/model')
 const stream = new Sse()
 const router = new Router()
 
-async function update () {
+const { toJWT } = require('./auth/jwt')
+const bcrypt = require('bcrypt')
+const auth = require('./auth/middleware')
+
+async function update() {
   const forests = await Forest.findAll({ include: [Mushroomer] })
-  const data = JSON.stringify(forests) 
+  const data = JSON.stringify(forests)
   stream.send(data)
 }
 
@@ -27,45 +31,31 @@ router.get(
 )
 
 router.post(
-  '/user',
-  async (req, res, next) => {
-  const { nickname, email, password, image } = req.body
-  const entity = await User.create({ 
-    nickname, 
-    email, 
-    password, 
-    image 
-  })
-
-  res.send(entity)
-})
-
-router.post(
   '/forest',
   async (req, res, next) => {
     console.log('forest post req.body:', req.body)
     const { name } = req.body
-    const entity = await Forest.create({ 
+    const entity = await Forest.create({
       name
     })
-    
+
     update()
     res.send(entity)
   }
 )
 
 router.post(
-  '/join/:id', 
+  '/join/:id',
   async (req, res, next) => {
 
     const forest = await Forest.findByPk(req.params.id)
     const { status, turn } = forest
-    
+
     if (status === 'joining') {
       const mushroomer = await Mushroomer.create(
-        { 
-          forestId: req.params.id, 
-          userId: req.body.id 
+        {
+          forestId: req.params.id,
+          userId: req.body.id
         }
       )
 
@@ -73,20 +63,20 @@ router.post(
         await forest.update({ turn: mushroomer.id })
       }
     }
-    
+
     update()
     res.send(forest)
   }
 )
 
 router.put(
-  "/start/:id", 
+  "/start/:id",
   async (req, res, next) => {
     const forest = await Forest.findByPk(req.params.id, { include: [Mushroomer] })
     const { status, mushroomers } = forest
 
     if (status === 'joining' && mushroomers.length >= 2) {
-      await forest.update({status: 'started'}) 
+      await forest.update({ status: 'started' })
     }
 
     update()
@@ -96,7 +86,7 @@ router.put(
 
 
 router.put(
-  '/roll/:id', 
+  '/roll/:id',
   async (req, res, next) => {
     const mushroomer = await Mushroomer.findByPk(req.params.id)
 
@@ -131,8 +121,8 @@ router.put(
       }
 
       if (newLocation >= 35) {
-       forestUpdate.status = 'finished'
-       mushroomerUpdate.location = 35
+        forestUpdate.status = 'finished'
+        mushroomerUpdate.location = 35
       }
 
       if (good) {
@@ -145,12 +135,86 @@ router.put(
 
       const updatedMushroomer = await mushroomer.update(mushroomerUpdate)
       await forest.update(forestUpdate)
-      
+
       update()
-      
+
       res.json(updatedMushroomer)
     }
   }
 )
+
+router.post(
+  '/user',
+  async (req, res, next) => {
+    console.log("POST user test")
+    const { nickname, email, password, image } = req.body
+    const user = await User.findOne({ where: { email: email } })
+
+    if (user) {
+      res.status(403).send("Email address already used.")
+    } else {
+      const encryptedUser = {
+        nickname,
+        email,
+        image,
+        password: bcrypt.hashSync(password, 10)
+      }
+
+      const entity = await User
+        .create(encryptedUser)
+
+      res.send(entity)
+    }
+  }
+)
+
+// login
+router.post(
+  '/login',
+  (req, res, next) => {
+    console.log("req.body", req.body)
+    User
+      .findOne({
+        where: {
+          email: req.body.email
+        }
+      })
+      .then(entity => {
+        if (!entity) {
+          res.status(400).send({
+            message: 'User with that email does not exist'
+          })
+        }
+
+        // 2. use bcrypt.compareSync to check the password against the stored hash
+        if (bcrypt.compareSync(req.body.password, entity.password)) {
+        // if (req.body.password === entity.password) {
+          // 3. if the password is correct, return a JWT with the userId of the user (user.id)
+          res.send({
+            // jwt: toJWT({ userId: 1 })
+            jwt: toJWT({ userId: entity.id }),
+            user: entity,
+            userId: entity.id
+          })
+        } else {
+          res.status(400).send({
+            message: 'Password was incorrect'
+          })
+        }
+      })
+      .catch(err => {
+        console.error(err)
+        res.status(500).send({
+          message: 'Something went wrong'
+        })
+      })
+  }
+)
+
+router.get('/secret-endpoint', auth, (req, res) => {
+  res.send({
+    message: `Thanks for visiting the secret endpoint ${req.user.email}.`
+  })
+})
 
 module.exports = router
