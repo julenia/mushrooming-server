@@ -51,11 +51,14 @@ router.post(
     const forest = await Forest.findByPk(req.params.id)
     const { status, turn } = forest
 
+    const user = await User.findByPk(req.body.id)
+
     if (status === 'joining') {
       const mushroomer = await Mushroomer.create(
         {
           forestId: req.params.id,
-          userId: req.body.id
+          userId: req.body.id,
+          nickname: user.nickname
         }
       )
 

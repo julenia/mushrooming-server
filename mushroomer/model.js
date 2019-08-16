@@ -21,6 +21,7 @@ const Mushroomer = db.define(
       field: 'number_of_bad_mushrooms',
       defaultValue: 0
     },
+    nickname: Sequelize.STRING
   },
   { tableName: 'mushroomers'}
   
