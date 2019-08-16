@@ -175,7 +175,7 @@ router.post(
 router.post(
   '/login',
   (req, res, next) => {
-    console.log("req.body", req.body)
+    console.log("req.body", req.body.email, req.body.password)
     User
       .findOne({
         where: {
@@ -184,10 +184,13 @@ router.post(
       })
       .then(entity => {
         if (!entity) {
-          res.status(400).send({
-            message: 'User with that email does not exist'
+          res.status(200).send({
+            message: 'user_email_error'
+            
           })
+          return
         }
+        console.log('entity', entity)
 
         // 2. use bcrypt.compareSync to check the password against the stored hash
         if (bcrypt.compareSync(req.body.password, entity.password)) {
@@ -200,9 +203,10 @@ router.post(
             userId: entity.id
           })
         } else {
-          res.status(400).send({
-            message: 'Password was incorrect'
+          res.status(200).send({
+            message: 'user_password_error'
           })
+          return
         }
       })
       .catch(err => {
